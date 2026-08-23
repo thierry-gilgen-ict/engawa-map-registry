@@ -7,8 +7,18 @@ import { fileURLToPath } from "node:url";
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "../../migrations");
 
+/** PostgreSQL session timeouts applied on each new pool connection via libpq options. */
+export const POOL_SESSION_OPTIONS =
+  "-c statement_timeout=30000 -c lock_timeout=5000 -c idle_in_transaction_session_timeout=60000";
+
 export function createPool(databaseUrl: string): pg.Pool {
-  return new pg.Pool({ connectionString: databaseUrl });
+  return new pg.Pool({
+    connectionString: databaseUrl,
+    max: 10,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+    options: POOL_SESSION_OPTIONS,
+  });
 }
 
 export async function withTransaction<T>(

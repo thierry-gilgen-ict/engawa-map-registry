@@ -5,9 +5,12 @@ const NODE_ENV_VALUES = ["development", "test", "production"] as const;
 export const configSchema = z
   .object({
     NODE_ENV: z.enum(NODE_ENV_VALUES),
-    DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    DATABASE_URL: z
+      .string({ error: "DATABASE_URL is required" })
+      .min(1, "DATABASE_URL is required"),
     HOST: z.string().min(1).default("127.0.0.1"),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(8).default(0),
   })
   .strict();
 
@@ -19,6 +22,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     DATABASE_URL: env.DATABASE_URL,
     HOST: env.HOST ?? "127.0.0.1",
     PORT: env.PORT ?? "3000",
+    TRUST_PROXY_HOPS: env.TRUST_PROXY_HOPS ?? "0",
   });
 
   if (!parsed.success) {

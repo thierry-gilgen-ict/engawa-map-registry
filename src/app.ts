@@ -6,22 +6,31 @@ import { registerApiRoutes } from "./api/routes.js";
 import { isDatabaseReady } from "./db/pool.js";
 import { InMemoryRateLimiter } from "./security/rate-limit.js";
 
-const SENSITIVE_HEADERS = new Set(["authorization", "cookie", "engawa-map-site-token-hash"]);
-
 export interface BuildAppOptions {
   pool: Pool;
   rateLimiter?: InMemoryRateLimiter;
   logger?: boolean;
+  /** Trusted reverse-proxy hops for request.ip (0 = direct connections only). */
+  trustProxyHops?: number;
+}
+
+function resolveTrustProxy(hops: number): false | ((address: string, hop: number) => boolean) {
+  if (hops <= 0) {
+    return false;
+  }
+  return (_address: string, hop: number) => hop < hops;
 }
 
 export function buildApp(options: BuildAppOptions) {
   const rateLimiter = options.rateLimiter ?? new InMemoryRateLimiter();
+  const hops = options.trustProxyHops ?? 0;
 
   const app = Fastify({
     logger: options.logger ?? false,
     bodyLimit: MAX_REQUEST_BODY_BYTES,
     genReqId: () => randomUUID(),
     disableRequestLogging: true,
+    trustProxy: resolveTrustProxy(hops),
   });
 
   app.addHook("onRequest", async (request) => {
@@ -33,12 +42,6 @@ export function buildApp(options: BuildAppOptions) {
 
   app.addHook("onResponse", async (request, reply) => {
     const duration = Date.now() - (request.startTime ?? Date.now());
-    const safeHeaders: Record<string, string> = {};
-    for (const [key, value] of Object.entries(request.headers)) {
-      if (!SENSITIVE_HEADERS.has(key.toLowerCase())) {
-        safeHeaders[key] = Array.isArray(value) ? value.join(",") : (value ?? "");
-      }
-    }
     if (options.logger) {
       request.log.info({
         reqId: request.id,

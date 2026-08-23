@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Engawa Map registry staging backup timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

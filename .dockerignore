@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.env
+**/.env
+deploy/staging/.env
+*.log
+*.dump
+.DS_Store
+.git
+.gitignore
+tests
+docs
+deploy/staging/backup.sh
+deploy/staging/restore-test.sh
+deploy/staging/systemd
+.github

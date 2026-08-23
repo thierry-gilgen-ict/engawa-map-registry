@@ -1,0 +1,82 @@
+http:
+  routers:
+    registry-register:
+      rule: Host(`staging-engawa-map.thierry-gilgen-ict.ch`) && Path(`/api/v1/sites`) && Method(`POST`)
+      entryPoints:
+        - websecure
+      priority: 100
+      service: registry
+      middlewares:
+        - security-headers
+        - body-limit
+        - rate-limit-register
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    registry-auth:
+      rule: Host(`staging-engawa-map.thierry-gilgen-ict.ch`) && PathPrefix(`/api/v1/sites/`) && (Method(`PATCH`) || Method(`DELETE`))
+      entryPoints:
+        - websecure
+      priority: 90
+      service: registry
+      middlewares:
+        - security-headers
+        - body-limit
+        - rate-limit-auth
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    registry:
+      rule: Host(`staging-engawa-map.thierry-gilgen-ict.ch`)
+      entryPoints:
+        - websecure
+      priority: 10
+      service: registry
+      middlewares:
+        - security-headers
+        - body-limit
+        - rate-limit-public
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+  services:
+    registry:
+      loadBalancer:
+        servers:
+          - url: http://registry:3000
+
+  middlewares:
+    security-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: no-referrer
+        frameDeny: true
+        contentSecurityPolicy: "default-src 'none'; frame-ancestors 'none'"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: false
+        stsPreload: false
+
+    body-limit:
+      buffering:
+        maxRequestBodyBytes: 16384
+
+    rate-limit-register:
+      rateLimit:
+        average: 2
+        burst: 5
+        period: 1s
+
+    rate-limit-auth:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: 1s
+
+    rate-limit-public:
+      rateLimit:
+        average: 30
+        burst: 60
+        period: 1s
