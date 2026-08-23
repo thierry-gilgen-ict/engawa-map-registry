@@ -12,6 +12,8 @@ export interface BuildAppOptions {
   pool: Pool;
   rateLimiter?: InMemoryRateLimiter;
   logger?: boolean;
+  /** When true, trust the reverse proxy for request.ip (single Traefik hop in staging). */
+  trustProxy?: boolean;
 }
 
 export function buildApp(options: BuildAppOptions) {
@@ -22,6 +24,7 @@ export function buildApp(options: BuildAppOptions) {
     bodyLimit: MAX_REQUEST_BODY_BYTES,
     genReqId: () => randomUUID(),
     disableRequestLogging: true,
+    trustProxy: options.trustProxy === true,
   });
 
   app.addHook("onRequest", async (request) => {

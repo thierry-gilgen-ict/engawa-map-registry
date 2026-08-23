@@ -17,7 +17,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "test": "vitest run",
-    "db:migrate": "tsx scripts/migrate.ts",
+    "db:migrate": "tsx src/migrate.ts",
     "admin": "tsx src/admin/cli.ts",
     "test:e2e:engawa-cli": "tsx scripts/e2e-engawa-cli.ts"
   },

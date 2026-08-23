@@ -3,10 +3,12 @@
 Dedicated registry service for the optional [Engawa Distribution Map](https://github.com/thierry-gilgen-ict/engawa). This repository is a **separate security boundary** from Engawa consumer sites and from the main Thierry Gilgen ICT website.
 
 ```text
-STATUS = LOCAL / PRE-DEPLOYMENT
+STATUS = STAGING (when deployed per deploy/staging/)
+PRODUCTION = NOT_AVAILABLE
+STAGING_HOSTNAME = staging-engawa-map.thierry-gilgen-ict.ch
 ```
 
-There is **no public production deployment** yet. Registration is voluntary, operator-initiated, and never required for Engawa-powered websites to function.
+Staging is operator-deployed via [deploy/staging/](deploy/staging/). There is **no public production deployment** yet. Registration is voluntary, operator-initiated, and never required for Engawa-powered websites to function.
 
 ## What this service does
 
@@ -42,16 +44,22 @@ Health checks:
 
 API base path: `/api/v1`
 
+## Staging deployment
+
+See [docs/staging-deployment.md](docs/staging-deployment.md) for the full runbook (host setup, TLS, backups, rollback).
+
+Staging URL (when deployed): `https://staging-engawa-map.thierry-gilgen-ict.ch`
+
 ## Commands
 
-| Command                       | Purpose                                                         |
-| ----------------------------- | --------------------------------------------------------------- |
-| `pnpm dev`                    | Start development server                                        |
-| `pnpm db:migrate`             | Apply SQL migrations                                            |
-| `pnpm test`                   | Integration tests (requires Postgres)                           |
-| `pnpm admin approve <siteId>` | Operator-only: `PENDING` → `LISTED`                             |
-| `pnpm admin delist <siteId>`  | Operator-only: revoke token and delist                          |
-| `pnpm test:e2e:engawa-cli`    | Optional local cross-contract test with sibling Engawa checkout |
+| Command                       | Purpose                                                      |
+| ----------------------------- | ------------------------------------------------------------ |
+| `pnpm dev`                    | Start development server                                     |
+| `pnpm db:migrate`             | Apply SQL migrations (explicit; not run on app startup)      |
+| `pnpm test`                   | Integration tests (requires Postgres)                        |
+| `pnpm admin approve <siteId>` | Operator-only: `PENDING` → `LISTED`                          |
+| `pnpm admin delist <siteId>`  | Operator-only: revoke token and delist                       |
+| `pnpm test:e2e:engawa-cli`    | Optional cross-contract test against a deployed registry URL |
 
 ## Token model
 
@@ -69,6 +77,7 @@ Registration idempotency compares `SHA-256(JSON.stringify(registrationPayloadSch
 
 - [API reference](docs/api.md)
 - [Security model](docs/security.md)
+- [Staging deployment runbook](docs/staging-deployment.md)
 - Engawa contract: [distribution-map-api.md](https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map-api.md)
 
 ## License
