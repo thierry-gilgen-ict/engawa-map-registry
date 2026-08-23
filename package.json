@@ -1,0 +1,42 @@
+{
+  "name": "@thierry-gilgen-ict/engawa-map-registry",
+  "version": "0.1.0",
+  "description": "Dedicated registry service for the optional Engawa Distribution Map",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "vitest run",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "admin": "tsx src/admin/cli.ts",
+    "test:e2e:engawa-cli": "tsx scripts/e2e-engawa-cli.ts"
+  },
+  "dependencies": {
+    "fastify": "^5.3.3",
+    "pg": "^8.16.0",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.4",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.0.0",
+    "prettier": "3.6.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1",
+    "vitest": "^4.0.15"
+  }
+}

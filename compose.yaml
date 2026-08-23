@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: engawa_registry
+      POSTGRES_PASSWORD: engawa_registry
+      POSTGRES_DB: engawa_registry
+    ports:
+      - "5436:5432"
+    volumes:
+      - engawa_registry_pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engawa_registry -d engawa_registry"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  engawa_registry_pg:
