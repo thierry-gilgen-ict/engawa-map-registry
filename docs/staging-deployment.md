@@ -222,11 +222,11 @@ Preserve volumes unless intentionally destroying staging data.
 
 ## Acceptance test matrix
 
-| Test                        | Scope                                                                        | Runs in CI | Staging evidence           |
-| --------------------------- | ---------------------------------------------------------------------------- | ---------- | -------------------------- |
-| `pnpm test:e2e:engawa-cli`  | **Local** registry E2E — starts a loopback Fastify registry on a random port | No         | No                         |
-| `pnpm test:e2e:staging-cli` | **Remote** HTTPS staging acceptance via `ENGAWA_MAP_ENDPOINT`                | No         | Yes (PASS)                 |
-| DM2B LIVE ACCEPTANCE        | Operator HTTPS checks on deployed staging hostname                           | No         | PASS                       |
+| Test                        | Scope                                                                        | Runs in CI | Staging evidence |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------- | ---------------- |
+| `pnpm test:e2e:engawa-cli`  | **Local** registry E2E — starts a loopback Fastify registry on a random port | No         | No               |
+| `pnpm test:e2e:staging-cli` | **Remote** HTTPS staging acceptance via `ENGAWA_MAP_ENDPOINT`                | No         | Yes (PASS)       |
+| DM2B LIVE ACCEPTANCE        | Operator HTTPS checks on deployed staging hostname                           | No         | PASS             |
 
 ```text
 LOCAL_E2E_CLAIMED_AS_STAGING_EVIDENCE=NO
