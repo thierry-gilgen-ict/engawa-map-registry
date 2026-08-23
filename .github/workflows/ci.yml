@@ -69,6 +69,8 @@ jobs:
         run: docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy config --quiet
 
       - name: Staging compose runtime smoke
+        env:
+          DATABASE_URL: postgresql://engawa_registry:dummy_password@postgres:5432/engawa_registry
         run: |
           set -euo pipefail
           COMPOSE="docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy -p engawa-map-staging-ci"
