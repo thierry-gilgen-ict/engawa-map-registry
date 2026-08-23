@@ -25,11 +25,13 @@ export function createPool(databaseUrl: string): pg.Pool {
   pool.on("connect", (client: PoolClient) => {
     setImmediate(() => {
       void client
-        .query(`
+        .query(
+          `
           SET statement_timeout = '${POOL_SESSION_TIMEOUTS.statement_timeout}';
           SET lock_timeout = '${POOL_SESSION_TIMEOUTS.lock_timeout}';
           SET idle_in_transaction_session_timeout = '${POOL_SESSION_TIMEOUTS.idle_in_transaction_session_timeout}';
-        `)
+        `,
+        )
         .catch(() => undefined);
     });
   });
