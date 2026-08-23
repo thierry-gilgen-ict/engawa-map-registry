@@ -18,6 +18,7 @@ BLOCKER=No VM/DNS/SSH provisioning access from CI or this workspace. Artifacts o
 | Edge       | Traefik v3 (file provider, no Docker socket)                                 |
 | App        | Node 24 Fastify registry (`registry` service)                                |
 | Database   | PostgreSQL 18 (`postgres` service, backend network only)                     |
+| PGDATA     | `/var/lib/postgresql/18/docker` (PG18 volume mount: `/var/lib/postgresql`)   |
 | Migrations | One-shot `migrate` service (`node dist/migrate.js`) — **not** on app startup |
 | TLS        | Let's Encrypt HTTP-01 via Traefik                                            |
 
@@ -137,6 +138,17 @@ Applied on each new connection via libpq `options` (`src/db/pool.ts`):
 
 Pool sizing: `max=10`, `connectionTimeoutMillis=5000`, `idleTimeoutMillis=30000`.
 
+## PostgreSQL 18 data directory
+
+PostgreSQL 18 images expect the data volume at `/var/lib/postgresql` (not `/var/lib/postgresql/data`). The effective `PGDATA` is `/var/lib/postgresql/18/docker`.
+
+Staging compose mounts `postgres_data:/var/lib/postgresql`. After first boot, verify:
+
+```bash
+docker compose exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SHOW data_directory"
+# expected: /var/lib/postgresql/18/docker
+```
+
 ## Graceful shutdown
 
 `registry` handles `SIGTERM` / `SIGINT`: closes Fastify, drains the pool, exits 0.
@@ -205,28 +217,68 @@ docker compose down
 
 Preserve volumes unless intentionally destroying staging data.
 
-## Engawa CLI E2E (post-deploy)
+## Acceptance test matrix
 
-From a machine with the sibling [Engawa](https://github.com/thierry-gilgen-ict/engawa) checkout:
+| Test                        | Scope                                                                        | Runs in CI | Staging evidence           |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------- | -------------------------- |
+| `pnpm test:e2e:engawa-cli`  | **Local** registry E2E — starts a loopback Fastify registry on a random port | No         | No                         |
+| `pnpm test:e2e:staging-cli` | **Remote** HTTPS staging acceptance via `ENGAWA_MAP_ENDPOINT`                | No         | Yes (when staging is live) |
+| DM2B LIVE ACCEPTANCE        | Operator HTTPS checks on deployed staging hostname                           | No         | Yes (post-deploy)          |
+
+```text
+LOCAL_E2E_CLAIMED_AS_STAGING_EVIDENCE=NO
+DM2B_LIVE_ACCEPTANCE_STATUS=NOT_RUN
+STAGING_DEPLOYED=NO
+```
+
+`test:e2e:engawa-cli` exercises the engawa-map CLI contract against a **local** registry only. It does **not** prove staging TLS, Traefik, or host networking. Report staging PASS only from `test:e2e:staging-cli` or manual post-deployment commands after a live deploy.
+
+## Post-deployment acceptance (operator)
+
+Prerequisites: DNS resolves, TLS is valid, `curl` health checks pass.
+
+From the sibling [Engawa](https://github.com/thierry-gilgen-ict/engawa) checkout (build the map CLI once):
 
 ```bash
 cd /path/to/engawa
-ENGAWA_MAP_REGISTRY_URL=https://staging-engawa-map.thierry-gilgen-ict.ch \
-  pnpm exec engawa-map register --dry-run   # adjust per engawa-map CLI docs
+pnpm --filter @thierry-gilgen-ict/engawa-map build
 ```
 
-Or from this repo:
+Create a throwaway consumer fixture directory with `engawa-map.config.json` and a stub `node_modules/@thierry-gilgen-ict/engawa-core/package.json` (see `scripts/e2e-staging-engawa-cli.ts`).
 
 ```bash
-ENGAWA_MAP_REGISTRY_URL=https://staging-engawa-map.thierry-gilgen-ict.ch \
-  pnpm test:e2e:engawa-cli
+export ENGAWA_MAP_ENDPOINT=https://staging-engawa-map.thierry-gilgen-ict.ch
+
+curl -fsS "$ENGAWA_MAP_ENDPOINT/healthz"
+curl -fsS "$ENGAWA_MAP_ENDPOINT/readyz"
+
+node /path/to/engawa/packages/map/dist/cli.js register --yes
+node /path/to/engawa/packages/map/dist/cli.js status
+node /path/to/engawa/packages/map/dist/cli.js unregister
 ```
 
-**Report PASS only after a live staging deployment.** Until DNS and the VM are provisioned, treat E2E as `NOT_RUN`.
+Or from this repo (same remote flow, not started in CI):
+
+```bash
+ENGAWA_MAP_ENDPOINT=https://staging-engawa-map.thierry-gilgen-ict.ch \
+  pnpm test:e2e:staging-cli
+```
+
+`ENGAWA_MAP_STAGING_ENDPOINT_OVERRIDE=1` allows a non-default HTTPS hostname for dry runs against alternate endpoints.
+
+**Report PASS only after a live staging deployment.** Until DNS and the VM are provisioned, treat DM2B live acceptance as `NOT_RUN`.
+
+## Local engawa-map CLI E2E (loopback)
+
+Starts a local registry on a random loopback port; does **not** contact staging:
+
+```bash
+pnpm test:e2e:engawa-cli
+```
 
 ## CI scope
 
-GitHub Actions CI validates build, lint, tests, and `docker compose config` — it does **not** deploy staging and has no deployment secrets.
+GitHub Actions CI validates build, lint, tests, `docker compose config`, and a **runtime smoke** of the staging compose stack (`postgres`, `migrate`, `registry`) — it does **not** deploy staging, does **not** run `test:e2e:staging-cli`, and has no deployment secrets.
 
 ## Docker log rotation
 

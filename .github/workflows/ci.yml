@@ -67,3 +67,32 @@ jobs:
 
       - name: Validate staging compose
         run: docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy config --quiet
+
+      - name: Staging compose runtime smoke
+        run: |
+          set -euo pipefail
+          COMPOSE="docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy -p engawa-map-staging-ci"
+          $COMPOSE up -d --build postgres migrate registry
+          for i in $(seq 1 60); do
+            if $COMPOSE exec -T registry node -e "fetch('http://127.0.0.1:3000/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"; then
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "registry readyz never became ready"
+              exit 1
+            fi
+            sleep 2
+          done
+          DATA_DIR=$($COMPOSE exec -T postgres psql -U engawa_registry -d engawa_registry -tAc "SHOW data_directory")
+          DATA_DIR=$(echo "$DATA_DIR" | tr -d '[:space:]')
+          if [ "$DATA_DIR" != "/var/lib/postgresql/18/docker" ]; then
+            echo "unexpected data_directory: $DATA_DIR"
+            exit 1
+          fi
+          SCHEMA=$($COMPOSE exec -T postgres psql -U engawa_registry -d engawa_registry -tAc "SELECT to_regclass('public.schema_migrations')")
+          SCHEMA=$(echo "$SCHEMA" | tr -d '[:space:]')
+          if [ "$SCHEMA" != "schema_migrations" ]; then
+            echo "schema_migrations missing: $SCHEMA"
+            exit 1
+          fi
+          $COMPOSE down -v --remove-orphans

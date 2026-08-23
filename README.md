@@ -53,14 +53,15 @@ Staging URL (when deployed): `https://staging-engawa-map.thierry-gilgen-ict.ch`
 
 ## Commands
 
-| Command                       | Purpose                                                      |
-| ----------------------------- | ------------------------------------------------------------ |
-| `pnpm dev`                    | Start development server                                     |
-| `pnpm db:migrate`             | Apply SQL migrations (explicit; not run on app startup)      |
-| `pnpm test`                   | Integration tests (requires Postgres)                        |
-| `pnpm admin approve <siteId>` | Operator-only: `PENDING` → `LISTED`                          |
-| `pnpm admin delist <siteId>`  | Operator-only: revoke token and delist                       |
-| `pnpm test:e2e:engawa-cli`    | Optional cross-contract test against a deployed registry URL |
+| Command                       | Purpose                                                   |
+| ----------------------------- | --------------------------------------------------------- |
+| `pnpm dev`                    | Start development server                                  |
+| `pnpm db:migrate`             | Apply SQL migrations (explicit; not run on app startup)   |
+| `pnpm test`                   | Integration tests (requires Postgres)                     |
+| `pnpm admin approve <siteId>` | Operator-only: `PENDING` → `LISTED`                       |
+| `pnpm admin delist <siteId>`  | Operator-only: revoke token and delist                    |
+| `pnpm test:e2e:engawa-cli`    | Local loopback engawa-map CLI E2E (starts local registry) |
+| `pnpm test:e2e:staging-cli`   | Remote HTTPS staging acceptance (`ENGAWA_MAP_ENDPOINT`)   |
 
 ## Token model
 
