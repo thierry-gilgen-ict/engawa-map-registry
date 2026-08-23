@@ -1,0 +1,98 @@
+# Security model
+
+Engawa Distribution Map registry (DM2A) — local/pre-deployment service.
+
+## Trust boundaries
+
+| Boundary              | Rule                                                |
+| --------------------- | --------------------------------------------------- |
+| Consumer Engawa sites | No registry credentials in website runtime          |
+| Main ICT website      | No shared DB, sessions, or deployment credentials   |
+| Registry PostgreSQL   | Dedicated credentials; least privilege              |
+| Operator              | Direct DB/env access for `pnpm admin` commands only |
+
+```text
+DOMAIN_VERIFICATION = DEFERRED
+ADMIN_HTTP_API = NONE
+PUBLIC_DEPLOYMENT = NOT_YET
+```
+
+## Token model
+
+- CLI generates ≥256-bit random site tokens
+- Server stores **hash only** (`SHA-256` base64url)
+- Registration sends hash via `Engawa-Map-Site-Token-Hash` header
+- Protected routes use `Authorization: Bearer <raw-token>`
+- Token hash is **not** accepted as a bearer credential
+- Constant-time comparison for hash verification
+- `DELETE` and operator `delist` revoke tokens (`token_hash = NULL`)
+
+## Idempotency
+
+- `Idempotency-Key` is not authentication
+- Binds payload hash + token hash + site record
+- 24-hour retention; conflicting replays return `409 IDEMPOTENCY_CONFLICT`
+- Replays never return raw tokens
+
+## Payload identity
+
+`SHA-256(hex)` of `JSON.stringify(registrationPayloadSchema.parse(payload))` — matches Engawa `engawa-map` client.
+
+## Canonical URL validation
+
+Parser-only validation. **No DNS. No HTTP.** Prevents SSRF via registration URLs.
+
+Rejected: non-HTTPS, credentials, query, fragment, non-root paths, localhost, `.local`, private/reserved IPs.
+
+## Duplicate origins
+
+Partial unique index on `canonical_url WHERE state <> 'DELISTED'`. Conflicts return `409 CANONICAL_URL_ALREADY_REGISTERED` without leaking prior registrant data.
+
+## Rate limiting
+
+In-memory, single-instance policies:
+
+| Policy                  | Approx. limit            |
+| ----------------------- | ------------------------ |
+| Registration (`POST`)   | 10 / minute / client key |
+| Authenticated mutations | 30 / minute              |
+| Public reads            | 120 / minute             |
+
+Rate-limit state is ephemeral infrastructure signal, not product data. `429` includes `Retry-After` when limited.
+
+## Body limits
+
+16 KB JSON body cap (`413`). Public list pagination capped at 100 items per page.
+
+## Logging and redaction
+
+Structured logs include request id, route, status, duration, safe error codes.
+
+**Never logged:** `Authorization`, raw bearer tokens, `Engawa-Map-Site-Token-Hash`, `DATABASE_URL`, request bodies.
+
+Raw IP addresses are not persisted as product telemetry.
+
+## SSRF / outbound fetch
+
+```text
+REGISTRY_OUTBOUND_SITE_FETCH = NONE
+```
+
+No `fetch`, `axios`, or HTTP client calls to canonical URLs, MCP endpoints, or site content during DM2A.
+
+## Manual moderation
+
+Operator-only CLI (`pnpm admin approve|delist`). No admin HTTP surface. No site bearer tokens for moderation.
+
+## Deployment assumptions (future DM2B)
+
+- HTTPS termination at edge
+- Separate credentials and network isolation
+- Backups and privacy notice for retention
+- Edge rate limits in addition to application limits
+
+## Residual risks
+
+- No domain ownership proof until a future verification phase
+- Maintainer manual approval is the v1 trust mechanism
+- Single-instance in-memory rate limits do not coordinate across replicas (acceptable for DM2A local/staging)
