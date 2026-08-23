@@ -3,10 +3,13 @@
 Dedicated registry service for the optional [Engawa Distribution Map](https://github.com/thierry-gilgen-ict/engawa). This repository is a **separate security boundary** from Engawa consumer sites and from the main Thierry Gilgen ICT website.
 
 ```text
-STATUS = STAGING (when deployed per deploy/staging/)
-PRODUCTION = NOT_AVAILABLE
-LIVE_STAGING_STATUS = NOT_DEPLOYED
+STATUS = STAGING_LIVE
+PRODUCTION = NOT_DEPLOYED
+LIVE_STAGING_STATUS = PASS
 STAGING_HOSTNAME = staging-engawa-map.thierry-gilgen-ict.ch
+STAGING_ACCEPTED_SHA = 61623df1422206d86fc0b4aee39e1f843440faa9
+DM2B_MERGE_SHA = 4a45b71cd042b81ceee4340148d60bf921526732
+PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch (not deployed — see docs/production-deployment.md)
 ```
 
 Staging is operator-deployed via [deploy/staging/](deploy/staging/). There is **no public production deployment** yet. Registration is voluntary, operator-initiated, and never required for Engawa-powered websites to function.
@@ -49,7 +52,7 @@ API base path: `/api/v1`
 
 See [docs/staging-deployment.md](docs/staging-deployment.md) for the full runbook (host setup, TLS, backups, rollback).
 
-Staging URL (when deployed): `https://staging-engawa-map.thierry-gilgen-ict.ch`
+Staging URL: `https://staging-engawa-map.thierry-gilgen-ict.ch` `https://staging-engawa-map.thierry-gilgen-ict.ch`
 
 ## Commands
 
