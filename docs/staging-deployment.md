@@ -6,6 +6,7 @@ Operator runbook for the Engawa Distribution Map registry staging environment.
 STAGING_HOSTNAME=staging-engawa-map.thierry-gilgen-ict.ch
 DNS_CONTROL_AVAILABLE=NO
 STAGING_HOST_AVAILABLE=NO
+LIVE_STAGING_STATUS=NOT_DEPLOYED
 BLOCKER=No VM/DNS/SSH provisioning access from CI or this workspace. Artifacts only until an operator deploys manually.
 ```
 
@@ -23,14 +24,15 @@ BLOCKER=No VM/DNS/SSH provisioning access from CI or this workspace. Artifacts o
 ## Architecture
 
 ```text
-Internet ──► Traefik (proxy:80/443) ──► registry:3000 (proxy + backend)
+Internet ──► Traefik (edge:80/443) ──► registry:3000 (proxy + backend)
                                               │
-                                              └──► postgres:5432 (backend only, internal network)
+                                              └──► postgres:5432 (backend only)
 ```
 
 Networks:
 
-- **proxy** — Traefik and registry (public edge to app)
+- **edge** — Traefik only (host port binding)
+- **proxy** — Traefik ↔ registry (`internal: true`)
 - **backend** — registry, postgres, migrate (`internal: true`; no outbound internet)
 
 No host ports are published for `registry` or `postgres`. Only Traefik exposes `80` and `443`.
@@ -39,7 +41,10 @@ No host ports are published for `registry` or `postgres`. Only Traefik exposes `
 
 1. Linux VM with Docker Engine and Compose v2
 2. DNS `A`/`AAAA` for `staging-engawa-map.thierry-gilgen-ict.ch` → VM public IP
-3. Firewall: allow inbound `80/tcp`, `443/tcp` only; deny direct access to app/db ports
+3. Firewall: allow inbound `22/tcp` (SSH), `80/tcp`, and `443/tcp` only; deny direct access to app/db ports
+
+   **SSH lockout warning:** Before tightening firewall rules, open a **second SSH session** and verify you can still connect after applying changes. Keep the first session open until the second succeeds.
+
 4. Clone this repository to e.g. `/opt/engawa-map-registry`
 5. Checkout the release tag or `main` commit to deploy
 
@@ -97,16 +102,18 @@ Traefik obtains certificates via Let's Encrypt HTTP-01 on port 80 (redirects to 
 
 ## Edge security (Traefik)
 
-| Control          | Setting                                                                                                                                         |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| HTTP → HTTPS     | Entrypoint redirect on `web`                                                                                                                    |
-| Body limit       | 16 KiB (`buffering.maxRequestBodyBytes`)                                                                                                        |
-| Rate limits      | Registration ~2/s burst 5; auth ~10/s burst 20; public ~30/s burst 60                                                                           |
-| Security headers | `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'`, HSTS |
-| CORS             | Not configured (no cross-origin allowance at edge)                                                                                              |
-| Access log       | Disabled (`--accesslog=false`) — no raw client IP retention at edge                                                                             |
+| Control           | Setting                                                                                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP → HTTPS      | Entrypoint redirect on `web`                                                                                                                                            |
+| Body limit        | 16 KiB (`buffering.maxRequestBodyBytes`)                                                                                                                                |
+| Rate limits       | Registration ~2/s burst 5; auth ~10/s burst 20; public ~30/s burst 60                                                                                                   |
+| Security headers  | `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, HSTS |
+| Forwarded headers | `forwardedHeaders.insecure=false` on `web` and `websecure` entrypoints                                                                                                  |
+| TLS minimum       | TLS 1.2 (`VersionTLS12`) via `traefik/dynamic/tls.yaml`                                                                                                                 |
+| CORS              | Not configured (no cross-origin allowance at edge)                                                                                                                      |
+| Access log        | Disabled (`--accesslog=false`) — no raw client IP retention at edge                                                                                                     |
 
-Application-layer rate limits still apply behind Traefik using `request.ip` with `TRUST_PROXY=true` (one hop).
+Application-layer rate limits still apply behind Traefik using `request.ip` with `TRUST_PROXY_HOPS=1` (one hop).
 
 ## Application hardening
 
@@ -120,7 +127,7 @@ Registry container:
 
 ## PostgreSQL pool timeouts
 
-Applied on each new connection (`src/db/pool.ts`):
+Applied on each new connection via libpq `options` (`src/db/pool.ts`):
 
 | Setting                               | Value | Purpose                     |
 | ------------------------------------- | ----- | --------------------------- |
@@ -143,6 +150,9 @@ docker compose stop registry   # sends SIGTERM
 Script: `deploy/staging/backup.sh`
 
 - Format: `pg_dump -Fc` (custom)
+- Atomic write: temp file in backup dir, verify non-empty, `chmod 600`, then `mv`
+- `umask 077` for created files
+- Retention runs only after a successful backup
 - Default directory: `/var/backups/engawa-map-registry`
 - Retention: 7 days
 - File mode: `600`, directory `700`
@@ -163,7 +173,7 @@ Adjust `WorkingDirectory` in the service unit if the clone path differs.
 
 ## Restore test
 
-`deploy/staging/restore-test.sh` restores the latest backup into a temporary database, verifies `schema_migrations` and `sites`, then drops the temp DB.
+`deploy/staging/restore-test.sh` restores the latest backup into a fixed temporary database (`engawa_registry_restore_test`), verifies `schema_migrations` and `sites`, then drops the temp DB on exit via `trap`.
 
 ```bash
 ./deploy/staging/restore-test.sh

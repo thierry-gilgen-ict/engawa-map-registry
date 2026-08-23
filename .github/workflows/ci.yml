@@ -59,3 +59,11 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Validate staging shell scripts
+        run: |
+          bash -n deploy/staging/backup.sh
+          bash -n deploy/staging/restore-test.sh
+
+      - name: Validate staging compose
+        run: docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy config --quiet

@@ -15,6 +15,7 @@ Engawa Distribution Map registry (DM2A) — local/pre-deployment service.
 DOMAIN_VERIFICATION = DEFERRED
 ADMIN_HTTP_API = NONE
 PUBLIC_DEPLOYMENT = NOT_YET
+LIVE_STAGING_STATUS = NOT_DEPLOYED
 STAGING = deploy/staging/ (Traefik edge, DM2B)
 ```
 
@@ -25,11 +26,13 @@ Staging terminates TLS at Traefik with:
 - HTTP → HTTPS redirect and Let's Encrypt certificates
 - Request body cap 16 KiB at edge (matches application limit)
 - Per-route rate limits (registration strict, auth moderate, public read relaxed)
-- Security headers: `nosniff`, `no-referrer`, frame deny, CSP `default-src 'none'`, HSTS for the staging hostname only (no `includeSubDomains`, no preload)
+- Security headers: `nosniff`, `no-referrer`, frame deny, CSP `default-src 'none'; frame-ancestors 'none'`, HSTS for the staging hostname only (no `includeSubDomains`, no preload)
+- TLS minimum version TLS 1.2 (`VersionTLS12`)
+- Forwarded headers: `forwardedHeaders.insecure=false` on Traefik entrypoints
 - No CORS middleware
 - Traefik access logging disabled (no raw client IP retention at edge)
 
-Behind the proxy, the app sets `TRUST_PROXY=true` (one hop) so in-memory rate limits use the client IP from `X-Forwarded-For`.
+Behind the proxy, the app sets `TRUST_PROXY_HOPS=1` (one hop) so in-memory rate limits use the client IP from `X-Forwarded-For`.
 
 ## Token model
 
@@ -101,7 +104,8 @@ Operator-only CLI (`pnpm admin approve|delist`). No admin HTTP surface. No site 
 ## Deployment assumptions (future DM2B)
 
 - HTTPS termination at edge — **implemented** for staging (`deploy/staging/`)
-- Separate credentials and network isolation
+- `DATABASE_URL` required at startup (no silent defaults in production or migration paths)
+- Separate credentials and network isolation (three-network topology: edge, proxy, backend)
 - Backups and privacy notice for retention
 - Edge rate limits in addition to application limits — **implemented** for staging
 

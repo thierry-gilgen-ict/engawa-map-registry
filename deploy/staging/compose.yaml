@@ -8,6 +8,7 @@ services:
     image: traefik:v3.3
     restart: unless-stopped
     networks:
+      - edge
       - proxy
     ports:
       - "80:80"
@@ -18,9 +19,11 @@ services:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       - --entrypoints.web.address=:80
+      - --entrypoints.web.forwardedHeaders.insecure=false
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.forwardedHeaders.insecure=false
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
@@ -87,7 +90,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       HOST: 0.0.0.0
       PORT: 3000
-      TRUST_PROXY: "true"
+      TRUST_PROXY_HOPS: "1"
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,7 +110,9 @@ services:
         max-file: "3"
 
 networks:
+  edge:
   proxy:
+    internal: true
   backend:
     internal: true
 

@@ -6,8 +6,6 @@ import { AppError } from "../errors.js";
 
 async function main(): Promise<void> {
   process.env.NODE_ENV ??= "development";
-  process.env.DATABASE_URL ??=
-    "postgresql://engawa_registry:engawa_registry@127.0.0.1:5436/engawa_registry";
 
   const [, , command, siteId] = process.argv;
 

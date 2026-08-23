@@ -40,8 +40,6 @@ export async function gracefulShutdown(
 
 async function main(): Promise<void> {
   process.env.NODE_ENV ??= "development";
-  process.env.DATABASE_URL ??=
-    "postgresql://engawa_registry:engawa_registry@127.0.0.1:5436/engawa_registry";
 
   const config = loadConfig();
   pool = createPool(config.DATABASE_URL);
@@ -49,7 +47,7 @@ async function main(): Promise<void> {
   const { app } = buildApp({
     pool,
     logger: config.NODE_ENV !== "test",
-    trustProxy: config.TRUST_PROXY,
+    trustProxyHops: config.TRUST_PROXY_HOPS,
   });
 
   const shutdown = (signal: string) => {

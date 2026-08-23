@@ -7,36 +7,18 @@ import { fileURLToPath } from "node:url";
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "../../migrations");
 
-/** Staging session timeouts applied on each new pool connection (see docs/staging-deployment.md). */
-export const POOL_SESSION_TIMEOUTS = {
-  statement_timeout: "30s",
-  lock_timeout: "5s",
-  idle_in_transaction_session_timeout: "60s",
-} as const;
+/** PostgreSQL session timeouts applied on each new pool connection via libpq options. */
+export const POOL_SESSION_OPTIONS =
+  "-c statement_timeout=30000 -c lock_timeout=5000 -c idle_in_transaction_session_timeout=60000";
 
 export function createPool(databaseUrl: string): pg.Pool {
-  const pool = new pg.Pool({
+  return new pg.Pool({
     connectionString: databaseUrl,
     max: 10,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
+    options: POOL_SESSION_OPTIONS,
   });
-
-  pool.on("connect", (client: PoolClient) => {
-    setImmediate(() => {
-      void client
-        .query(
-          `
-          SET statement_timeout = '${POOL_SESSION_TIMEOUTS.statement_timeout}';
-          SET lock_timeout = '${POOL_SESSION_TIMEOUTS.lock_timeout}';
-          SET idle_in_transaction_session_timeout = '${POOL_SESSION_TIMEOUTS.idle_in_transaction_session_timeout}';
-        `,
-        )
-        .catch(() => undefined);
-    });
-  });
-
-  return pool;
 }
 
 export async function withTransaction<T>(

@@ -5,6 +5,7 @@ Dedicated registry service for the optional [Engawa Distribution Map](https://gi
 ```text
 STATUS = STAGING (when deployed per deploy/staging/)
 PRODUCTION = NOT_AVAILABLE
+LIVE_STAGING_STATUS = NOT_DEPLOYED
 STAGING_HOSTNAME = staging-engawa-map.thierry-gilgen-ict.ch
 ```
 

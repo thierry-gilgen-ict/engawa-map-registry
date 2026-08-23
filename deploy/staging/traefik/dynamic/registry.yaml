@@ -12,6 +12,7 @@ http:
         - rate-limit-register
       tls:
         certResolver: letsencrypt
+        options: default
 
     registry-auth:
       rule: Host(`staging-engawa-map.thierry-gilgen-ict.ch`) && PathPrefix(`/api/v1/sites/`) && (Method(`PATCH`) || Method(`DELETE`))
@@ -25,6 +26,7 @@ http:
         - rate-limit-auth
       tls:
         certResolver: letsencrypt
+        options: default
 
     registry:
       rule: Host(`staging-engawa-map.thierry-gilgen-ict.ch`)
@@ -38,6 +40,7 @@ http:
         - rate-limit-public
       tls:
         certResolver: letsencrypt
+        options: default
 
   services:
     registry:
@@ -51,7 +54,7 @@ http:
         contentTypeNosniff: true
         referrerPolicy: no-referrer
         frameDeny: true
-        contentSecurityPolicy: "default-src 'none'"
+        contentSecurityPolicy: "default-src 'none'; frame-ancestors 'none'"
         stsSeconds: 31536000
         stsIncludeSubdomains: false
         stsPreload: false
