@@ -69,12 +69,16 @@ export function buildApp(options: BuildAppOptions) {
       typeof error === "object" && error !== null && "code" in error
         ? String((error as { code: unknown }).code)
         : undefined;
-    if (code === "FST_ERR_CTP_INVALID_CONTENT_LENGTH") {
-      void reply.code(413).send();
+    if (code === "FST_ERR_CTP_INVALID_CONTENT_LENGTH" || code === "FST_ERR_CTP_BODY_TOO_LARGE") {
+      void reply.code(413).send({
+        error: { code: "INVALID_REQUEST", message: "Request body too large." },
+      });
       return;
     }
-    if (code === "FST_ERR_CTP_BODY_TOO_LARGE") {
-      void reply.code(413).send();
+    if (code === "FST_ERR_CTP_INVALID_JSON_BODY") {
+      void reply.code(400).send({
+        error: { code: "INVALID_REQUEST", message: "Invalid JSON request body." },
+      });
       return;
     }
     request.log.error({ err: error, reqId: request.id });

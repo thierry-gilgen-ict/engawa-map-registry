@@ -72,3 +72,19 @@ export function isUniqueViolation(error: unknown): boolean {
     (error as { code: string }).code === "23505"
   );
 }
+
+function uniqueViolationConstraint(error: unknown): string | undefined {
+  if (!isUniqueViolation(error) || typeof error !== "object" || error === null) {
+    return undefined;
+  }
+  const constraint = (error as { constraint?: unknown }).constraint;
+  return typeof constraint === "string" ? constraint : undefined;
+}
+
+export function isCanonicalUrlUniqueViolation(error: unknown): boolean {
+  return uniqueViolationConstraint(error) === "sites_canonical_url_active_idx";
+}
+
+export function isIdempotencyKeyUniqueViolation(error: unknown): boolean {
+  return uniqueViolationConstraint(error) === "idempotency_keys_pkey";
+}

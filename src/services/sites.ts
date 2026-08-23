@@ -6,7 +6,8 @@ import {
   canonicalUrlAlreadyRegistered,
   idempotencyConflict,
   internalError,
-  isUniqueViolation,
+  isCanonicalUrlUniqueViolation,
+  isIdempotencyKeyUniqueViolation,
 } from "../errors.js";
 import { newSiteId, queryOne, toIsoString } from "../db/pool.js";
 import type { RegisterResponse } from "../schemas/api.js";
@@ -43,6 +44,51 @@ function mapRegisterResponse(row: SiteRow): RegisterResponse {
   };
 }
 
+async function acquireIdempotencyLock(client: PoolClient, idempotencyKey: string): Promise<void> {
+  await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))`, [
+    idempotencyKey,
+  ]);
+}
+
+async function loadIdempotencyRow(
+  client: PoolClient,
+  idempotencyKey: string,
+): Promise<IdempotencyRow | null> {
+  return queryOne<IdempotencyRow>(
+    client,
+    `SELECT idempotency_key, site_id, payload_hash, token_hash, created_at, expires_at
+     FROM idempotency_keys
+     WHERE idempotency_key = $1`,
+    [idempotencyKey],
+  );
+}
+
+async function replayFromIdempotency(
+  client: PoolClient,
+  existing: IdempotencyRow,
+  payloadHash: string,
+  tokenHash: string,
+): Promise<RegisterResponse> {
+  if (existing.expires_at.getTime() <= Date.now()) {
+    await client.query("DELETE FROM idempotency_keys WHERE idempotency_key = $1", [
+      existing.idempotency_key,
+    ]);
+    throw idempotencyConflict();
+  }
+
+  if (existing.payload_hash !== payloadHash || existing.token_hash !== tokenHash) {
+    throw idempotencyConflict();
+  }
+
+  const site = await queryOne<SiteRow>(client, "SELECT * FROM sites WHERE id = $1", [
+    existing.site_id,
+  ]);
+  if (!site) {
+    throw internalError();
+  }
+  return mapRegisterResponse(site);
+}
+
 export async function registerSite(
   client: PoolClient,
   input: {
@@ -51,40 +97,16 @@ export async function registerSite(
     tokenHash: string;
   },
 ): Promise<RegisterResponse> {
+  await acquireIdempotencyLock(client, input.idempotencyKey);
+
   const payloadHash = hashRegistrationPayload(input.payload);
   const expiresAt = new Date(Date.now() + IDEMPOTENCY_RETENTION_HOURS * 60 * 60 * 1000);
 
   await client.query("DELETE FROM idempotency_keys WHERE expires_at < NOW()");
 
-  const existingIdempotency = await queryOne<IdempotencyRow>(
-    client,
-    `SELECT idempotency_key, site_id, payload_hash, token_hash, created_at, expires_at
-     FROM idempotency_keys
-     WHERE idempotency_key = $1`,
-    [input.idempotencyKey],
-  );
-
+  const existingIdempotency = await loadIdempotencyRow(client, input.idempotencyKey);
   if (existingIdempotency) {
-    if (existingIdempotency.expires_at.getTime() <= Date.now()) {
-      await client.query("DELETE FROM idempotency_keys WHERE idempotency_key = $1", [
-        input.idempotencyKey,
-      ]);
-    } else {
-      if (
-        existingIdempotency.payload_hash !== payloadHash ||
-        existingIdempotency.token_hash !== input.tokenHash
-      ) {
-        throw idempotencyConflict();
-      }
-
-      const site = await queryOne<SiteRow>(client, "SELECT * FROM sites WHERE id = $1", [
-        existingIdempotency.site_id,
-      ]);
-      if (!site) {
-        throw internalError();
-      }
-      return mapRegisterResponse(site);
-    }
+    return replayFromIdempotency(client, existingIdempotency, payloadHash, input.tokenHash);
   }
 
   const siteId = newSiteId();
@@ -105,7 +127,7 @@ export async function registerSite(
       ],
     );
   } catch (error) {
-    if (isUniqueViolation(error)) {
+    if (isCanonicalUrlUniqueViolation(error)) {
       throw canonicalUrlAlreadyRegistered();
     }
     throw error;
@@ -118,7 +140,14 @@ export async function registerSite(
       [input.idempotencyKey, siteId, payloadHash, input.tokenHash, expiresAt],
     );
   } catch (error) {
-    if (isUniqueViolation(error)) {
+    if (isIdempotencyKeyUniqueViolation(error)) {
+      const raced = await loadIdempotencyRow(client, input.idempotencyKey);
+      if (!raced) {
+        throw internalError();
+      }
+      return replayFromIdempotency(client, raced, payloadHash, input.tokenHash);
+    }
+    if (isCanonicalUrlUniqueViolation(error)) {
       throw canonicalUrlAlreadyRegistered();
     }
     throw error;

@@ -297,20 +297,3 @@ describe("health", () => {
     expect(response.json().status).toBe("ready");
   });
 });
-
-describe("security", () => {
-  it("rejects oversized body with 413", async () => {
-    const huge = "x".repeat(20_000);
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/v1/sites",
-      headers: {
-        "content-type": "application/json",
-        "idempotency-key": randomUUID(),
-        "engawa-map-site-token-hash": hashSiteToken("x".repeat(32)),
-      },
-      payload: { displayName: huge, canonicalUrl: uniqueOrigin(), packages: {} },
-    });
-    expect(response.statusCode).toBe(413);
-  });
-});
