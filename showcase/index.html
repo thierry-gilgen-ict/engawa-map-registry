@@ -64,17 +64,28 @@
       <section class="join" aria-labelledby="join-heading">
         <h2 id="join-heading">Join the map</h2>
         <p>
-          Listing is voluntary and operator-initiated. Sites register in a
-          <code>PENDING</code> state and appear here only after manual approval.
+          Listing is voluntary and operator-initiated. Registration is never automatic. The first
+          successful registration is always <code>PENDING</code>; sites appear here only after
+          manual approval.
         </p>
         <p>
-          The <code>engawa-map</code> CLI will be released with a production default endpoint after
-          production acceptance (DM3C). Until then, use the documented staging endpoint for testing.
+          Install the published CLI client and register from your project root:
+        </p>
+        <pre><code>npm install --save-dev @thierry-gilgen-ict/engawa-map
+npx engawa-map register</code></pre>
+        <p>
+          The CLI defaults to the production registry when <code>ENGAWA_MAP_ENDPOINT</code> is
+          unset. Engawa-powered websites do not phone home from normal runtime — no telemetry, no
+          automatic crawling, and no browser admin UI.
         </p>
         <p>
           See the
           <a href="https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map.md"
             >Engawa Distribution Map documentation</a
+          >
+          and
+          <a href="https://www.npmjs.com/package/@thierry-gilgen-ict/engawa-map"
+            ><code>@thierry-gilgen-ict/engawa-map@0.1.0</code> on npm</a
           >
           for integration details.
         </p>

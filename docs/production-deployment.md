@@ -1,17 +1,18 @@
 # Production deployment design (DM3A contract)
 
-**Status:** DM3B artifacts ready — **production NOT deployed**. Live acceptance is **DM3C**.
+**Status:** **LIVE** — DM3C production acceptance PASS. Public CLI `@thierry-gilgen-ict/engawa-map@0.1.0` on npm.
 
 ## Deployment status
 
 ```text
-PRODUCTION_DEPLOYMENT = NO
+PRODUCTION_DEPLOYMENT = LIVE
 PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch
 PRODUCTION_ORIGIN = https://engawa-map.thierry-gilgen-ict.ch
+PRODUCTION_ACCEPTANCE = PASS (DM3C)
+PRODUCTION_ACCEPTED_SHA = 91b971e47f4014df97cd4dbcade73ac2d92e8aa1
 STAGING_LIVE = YES (staging-engawa-map.thierry-gilgen-ict.ch, DM2B PASS)
 STAGING_DATA_COPIED_TO_PRODUCTION = NO
-DM3B_SHOWCASE = IMPLEMENTED (showcase/ static service)
-DM3B_DEPLOY_ARTIFACTS = READY (deploy/production/)
+NPM_CLI = @thierry-gilgen-ict/engawa-map@0.1.0 (public on npm)
 ```
 
 Authoritative product contract: [Engawa distribution-map-production-launch.md](https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map-production-launch.md).

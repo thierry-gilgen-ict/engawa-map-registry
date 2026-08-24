@@ -1,6 +1,6 @@
 # Security model
 
-Engawa Distribution Map registry — staging live (DM2B PASS); production not deployed.
+Engawa Distribution Map registry — staging live (DM2B PASS); production live (DM3C PASS).
 
 ## Trust boundaries
 
@@ -14,7 +14,7 @@ Engawa Distribution Map registry — staging live (DM2B PASS); production not de
 ```text
 DOMAIN_VERIFICATION = DEFERRED
 ADMIN_HTTP_API = NONE
-PRODUCTION_DEPLOYMENT = NOT_DEPLOYED
+PRODUCTION_DEPLOYMENT = LIVE
 LIVE_STAGING_STATUS = PASS
 STAGING = deploy/staging/ (Traefik edge, DM2B merged 4a45b71)
 STAGING_ACCEPTED_SHA = 61623df1422206d86fc0b4aee39e1f843440faa9
