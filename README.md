@@ -52,7 +52,7 @@ API base path: `/api/v1`
 
 See [docs/staging-deployment.md](docs/staging-deployment.md) for the full runbook (host setup, TLS, backups, rollback).
 
-Staging URL: `https://staging-engawa-map.thierry-gilgen-ict.ch` `https://staging-engawa-map.thierry-gilgen-ict.ch`
+Staging URL: `https://staging-engawa-map.thierry-gilgen-ict.ch`
 
 ## Commands
 
