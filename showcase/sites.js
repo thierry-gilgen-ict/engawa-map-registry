@@ -4,6 +4,22 @@
 export const PAGE_LIMIT = 100;
 export const MAX_PAGES = 50;
 
+/** @type {readonly string[]} */
+export const PACKAGE_ORDER = [
+  "@thierry-gilgen-ict/engawa-core",
+  "@thierry-gilgen-ict/engawa-discovery",
+  "@thierry-gilgen-ict/engawa-mcp",
+  "@thierry-gilgen-ict/engawa-react",
+];
+
+/** @type {Readonly<Record<string, string>>} */
+export const PACKAGE_LABELS = {
+  "@thierry-gilgen-ict/engawa-core": "Engawa core",
+  "@thierry-gilgen-ict/engawa-discovery": "Engawa discovery",
+  "@thierry-gilgen-ict/engawa-mcp": "Engawa MCP",
+  "@thierry-gilgen-ict/engawa-react": "Engawa React",
+};
+
 /**
  * Fetch all LISTED sites from the public API, merging paginated responses.
  * @param {(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>} [fetchFn]
@@ -125,8 +141,12 @@ export function createSiteCardElement(site, doc = document) {
   const meta = doc.createElement("dl");
   meta.className = "site-card__meta";
 
-  const coreVersion = site.packages["@thierry-gilgen-ict/engawa-core"];
-  appendMetaRow(doc, meta, "Engawa core", coreVersion);
+  for (const pkg of PACKAGE_ORDER) {
+    const version = site.packages[pkg];
+    if (version !== undefined) {
+      appendMetaRow(doc, meta, PACKAGE_LABELS[pkg], version);
+    }
+  }
 
   if (site.hints?.framework) {
     appendMetaRow(doc, meta, "Framework", site.hints.framework);
