@@ -32,6 +32,66 @@ sudo docker compose --env-file .env -f compose.yaml ...
 
 When uploading shell scripts from Windows, ensure **Unix line endings (LF)**. CRLF breaks `/bin/sh` on the server.
 
+### Windows operator note
+
+For complex remote shell commands, avoid fragile nested PowerShell quoting (especially `sudo docker compose ... exec ...` with flags). Preferred pattern:
+
+1. SSH to the production host (existing key only):
+
+   ```powershell
+   ssh -o IdentitiesOnly=yes -i "$env:USERPROFILE\.ssh\engawa" deploy@168.119.177.41
+   ```
+
+2. Upload an **LF-terminated** temporary shell script (stdin pipe or scp), `chmod +x`, execute, then remove it.
+
+Never commit, read, print, or copy the private SSH key.
+
+## Production moderation
+
+Manual site moderation is **operator-only**. There is no admin HTTP API in v1.
+
+### Obtain a siteId
+
+- From the consumer project after `engawa-map register` (CLI prints `siteId=...`).
+- The public API (`GET /api/v1/sites`) lists **LISTED** sites only — not `PENDING`.
+- To discover pending rows on the production host, an operator with DB access may inspect the `sites` table (for example `state = 'PENDING'`) via Postgres exec — no secrets in logs or issues.
+
+### Admin CLI commands (v1)
+
+The registry admin CLI supports exactly:
+
+```text
+approve <siteId>
+delist <siteId>
+```
+
+There is **no** `list pending` subcommand in v1.
+
+Run inside the production registry container from the compose directory:
+
+```bash
+cd /opt/engawa-map-registry/deploy/production
+
+sudo docker compose --env-file .env -f compose.yaml exec -T registry \
+  node dist/admin/cli.js approve <siteId>
+
+sudo docker compose --env-file .env -f compose.yaml exec -T registry \
+  node dist/admin/cli.js delist <siteId>
+```
+
+Expected output:
+
+```text
+Approved site <siteId> (state=LISTED)
+Delisted site <siteId>
+```
+
+Lifecycle:
+
+- New registrations are `PENDING` until manually approved.
+- `approve` transitions `PENDING` → `LISTED` (site appears on public API and showcase).
+- `delist` revokes the site token hash and removes public listing immediately.
+
 ## Normal deployment procedure
 
 Use this after a registry PR is merged and post-merge CI is green.
