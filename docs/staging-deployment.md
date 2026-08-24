@@ -4,10 +4,13 @@ Operator runbook for the Engawa Distribution Map registry staging environment.
 
 ```text
 STAGING_HOSTNAME=staging-engawa-map.thierry-gilgen-ict.ch
-DNS_CONTROL_AVAILABLE=NO
-STAGING_HOST_AVAILABLE=NO
-LIVE_STAGING_STATUS=NOT_DEPLOYED
-BLOCKER=No VM/DNS/SSH provisioning access from CI or this workspace. Artifacts only until an operator deploys manually.
+DNS_CONTROL_AVAILABLE=YES
+STAGING_HOST_AVAILABLE=YES
+LIVE_STAGING_STATUS=PASS
+DM2B_LIVE_ACCEPTANCE=PASS
+STAGING_ACCEPTED_SHA=61623df1422206d86fc0b4aee39e1f843440faa9
+DM2B_MERGE_SHA=4a45b71cd042b81ceee4340148d60bf921526732
+PRODUCTION_DEPLOYED=NO
 ```
 
 ## Overview
@@ -219,16 +222,18 @@ Preserve volumes unless intentionally destroying staging data.
 
 ## Acceptance test matrix
 
-| Test                        | Scope                                                                        | Runs in CI | Staging evidence           |
-| --------------------------- | ---------------------------------------------------------------------------- | ---------- | -------------------------- |
-| `pnpm test:e2e:engawa-cli`  | **Local** registry E2E — starts a loopback Fastify registry on a random port | No         | No                         |
-| `pnpm test:e2e:staging-cli` | **Remote** HTTPS staging acceptance via `ENGAWA_MAP_ENDPOINT`                | No         | Yes (when staging is live) |
-| DM2B LIVE ACCEPTANCE        | Operator HTTPS checks on deployed staging hostname                           | No         | Yes (post-deploy)          |
+| Test                        | Scope                                                                        | Runs in CI | Staging evidence |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------- | ---------------- |
+| `pnpm test:e2e:engawa-cli`  | **Local** registry E2E — starts a loopback Fastify registry on a random port | No         | No               |
+| `pnpm test:e2e:staging-cli` | **Remote** HTTPS staging acceptance via `ENGAWA_MAP_ENDPOINT`                | No         | Yes (PASS)       |
+| DM2B LIVE ACCEPTANCE        | Operator HTTPS checks on deployed staging hostname                           | No         | PASS             |
 
 ```text
 LOCAL_E2E_CLAIMED_AS_STAGING_EVIDENCE=NO
-DM2B_LIVE_ACCEPTANCE_STATUS=NOT_RUN
-STAGING_DEPLOYED=NO
+DM2B_LIVE_ACCEPTANCE_STATUS=PASS
+STAGING_DEPLOYED=YES
+STAGING_ACCEPTED_SHA=61623df1422206d86fc0b4aee39e1f843440faa9
+PRODUCTION_DEPLOYED=NO
 ```
 
 `test:e2e:engawa-cli` exercises the engawa-map CLI contract against a **local** registry only. It does **not** prove staging TLS, Traefik, or host networking. Report staging PASS only from `test:e2e:staging-cli` or manual post-deployment commands after a live deploy.
@@ -266,7 +271,7 @@ ENGAWA_MAP_ENDPOINT=https://staging-engawa-map.thierry-gilgen-ict.ch \
 
 `ENGAWA_MAP_STAGING_ENDPOINT_OVERRIDE=1` allows a non-default HTTPS hostname for dry runs against alternate endpoints.
 
-**Report PASS only after a live staging deployment.** Until DNS and the VM are provisioned, treat DM2B live acceptance as `NOT_RUN`.
+**DM2B live acceptance PASS** was recorded at `https://staging-engawa-map.thierry-gilgen-ict.ch` (accepted SHA `61623df`). Production deployment remains **not** available. See [production-deployment.md](production-deployment.md) for DM3 design.
 
 ## Local engawa-map CLI E2E (loopback)
 

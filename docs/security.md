@@ -1,6 +1,6 @@
 # Security model
 
-Engawa Distribution Map registry (DM2A) — local/pre-deployment service.
+Engawa Distribution Map registry — staging live (DM2B PASS); production not deployed.
 
 ## Trust boundaries
 
@@ -14,9 +14,10 @@ Engawa Distribution Map registry (DM2A) — local/pre-deployment service.
 ```text
 DOMAIN_VERIFICATION = DEFERRED
 ADMIN_HTTP_API = NONE
-PUBLIC_DEPLOYMENT = NOT_YET
-LIVE_STAGING_STATUS = NOT_DEPLOYED
-STAGING = deploy/staging/ (Traefik edge, DM2B)
+PRODUCTION_DEPLOYMENT = NOT_DEPLOYED
+LIVE_STAGING_STATUS = PASS
+STAGING = deploy/staging/ (Traefik edge, DM2B merged 4a45b71)
+STAGING_ACCEPTED_SHA = 61623df1422206d86fc0b4aee39e1f843440faa9
 ```
 
 ## Edge layer (staging, DM2B)
@@ -101,9 +102,9 @@ No `fetch`, `axios`, or HTTP client calls to canonical URLs, MCP endpoints, or s
 
 Operator-only CLI (`pnpm admin approve|delist`). No admin HTTP surface. No site bearer tokens for moderation.
 
-## Deployment assumptions (future DM2B)
+## Deployment (DM2B staging live; production DM3)
 
-- HTTPS termination at edge — **implemented** for staging (`deploy/staging/`)
+- HTTPS termination at edge — staging live; production design in [production-deployment.md](production-deployment.md)
 - `DATABASE_URL` required at startup (no silent defaults in production or migration paths)
 - Separate credentials and network isolation (three-network topology: edge, proxy, backend)
 - Backups and privacy notice for retention
@@ -113,4 +114,4 @@ Operator-only CLI (`pnpm admin approve|delist`). No admin HTTP surface. No site 
 
 - No domain ownership proof until a future verification phase
 - Maintainer manual approval is the v1 trust mechanism
-- Single-instance in-memory rate limits do not coordinate across replicas (acceptable for DM2A local/staging)
+- Single-instance in-memory rate limits do not coordinate across replicas (acceptable for single-instance staging; production multi-replica TBD in DM3B)
