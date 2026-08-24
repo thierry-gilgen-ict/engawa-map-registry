@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engawa Distribution Map</title>
+    <meta
+      name="description"
+      content="Optional public showcase of Engawa-powered websites. Voluntary, operator-initiated listings only."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="container">
+        <p class="eyebrow">Engawa Distribution Map</p>
+        <h1>Public showcase of Engawa-powered sites</h1>
+        <p class="lede">
+          A voluntary directory for operators who choose to list their public Engawa-powered
+          websites. No visitor tracking. No automatic crawling.
+        </p>
+        <nav class="page-nav" aria-label="Site">
+          <a href="/privacy">Privacy notice</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="controls" aria-label="Filters">
+        <label class="control">
+          <span class="control__label">Search</span>
+          <input
+            id="search"
+            type="search"
+            placeholder="Filter by display name"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="control">
+          <span class="control__label">Framework</span>
+          <select id="framework-filter">
+            <option value="">All frameworks</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span class="control__label">Bring Your Agent</span>
+          <select id="bya-filter">
+            <option value="all">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+
+        <p id="result-count" class="result-count" aria-live="polite"></p>
+      </section>
+
+      <section id="loading" class="status" aria-live="polite">Loading listed sites…</section>
+      <section id="error" class="status status--error" hidden aria-live="assertive"></section>
+      <section id="empty" class="status" hidden aria-live="polite">No listed sites yet.</section>
+      <section id="results" class="site-grid" hidden aria-live="polite"></section>
+
+      <section class="join" aria-labelledby="join-heading">
+        <h2 id="join-heading">Join the map</h2>
+        <p>
+          Listing is voluntary and operator-initiated. Sites register in a
+          <code>PENDING</code> state and appear here only after manual approval.
+        </p>
+        <p>
+          The <code>engawa-map</code> CLI will be released with a production default endpoint after
+          production acceptance (DM3C). Until then, use the documented staging endpoint for testing.
+        </p>
+        <p>
+          See the
+          <a href="https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map.md"
+            >Engawa Distribution Map documentation</a
+          >
+          for integration details.
+        </p>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <div class="container">
+        <p>
+          Read the <a href="/privacy">privacy notice</a> for token handling, retention, and removal
+          contact paths.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

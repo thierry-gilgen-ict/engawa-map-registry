@@ -15,6 +15,14 @@ export default tseslint.config(
     },
   },
   {
+    files: ["showcase/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+  },
+  {
     ignores: ["dist/**", "node_modules/**", "coverage/**"],
   },
 );

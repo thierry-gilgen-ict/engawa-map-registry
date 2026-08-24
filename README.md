@@ -5,6 +5,7 @@ Dedicated registry service for the optional [Engawa Distribution Map](https://gi
 ```text
 STATUS = STAGING_LIVE
 PRODUCTION = NOT_DEPLOYED
+DM3B_ARTIFACTS = READY (showcase + deploy/production — not deployed)
 LIVE_STAGING_STATUS = PASS
 STAGING_HOSTNAME = staging-engawa-map.thierry-gilgen-ict.ch
 STAGING_ACCEPTED_SHA = 61623df1422206d86fc0b4aee39e1f843440faa9
@@ -12,7 +13,7 @@ DM2B_MERGE_SHA = 4a45b71cd042b81ceee4340148d60bf921526732
 PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch (not deployed — see docs/production-deployment.md)
 ```
 
-Staging is operator-deployed via [deploy/staging/](deploy/staging/). There is **no public production deployment** yet. Registration is voluntary, operator-initiated, and never required for Engawa-powered websites to function.
+Staging is operator-deployed via [deploy/staging/](deploy/staging/). Production deploy artifacts live in [deploy/production/](deploy/production/) and the public showcase static service in [showcase/](showcase/). **Production is not deployed** until DM3C acceptance.
 
 ## What this service does
 
@@ -54,6 +55,12 @@ See [docs/staging-deployment.md](docs/staging-deployment.md) for the full runboo
 
 Staging URL: `https://staging-engawa-map.thierry-gilgen-ict.ch`
 
+## Production deployment (DM3B — not live)
+
+See [docs/production-deployment.md](docs/production-deployment.md). Artifacts are ready (`deploy/production/`, `showcase/`); **production is not deployed** until DM3C acceptance.
+
+Target URL: `https://engawa-map.thierry-gilgen-ict.ch`
+
 ## Commands
 
 | Command                       | Purpose                                                   |
@@ -83,6 +90,7 @@ Registration idempotency compares `SHA-256(JSON.stringify(registrationPayloadSch
 - [API reference](docs/api.md)
 - [Security model](docs/security.md)
 - [Staging deployment runbook](docs/staging-deployment.md)
+- [Production deployment design](docs/production-deployment.md)
 - Engawa contract: [distribution-map-api.md](https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map-api.md)
 
 ## License

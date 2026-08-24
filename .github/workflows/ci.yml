@@ -65,8 +65,21 @@ jobs:
           bash -n deploy/staging/backup.sh
           bash -n deploy/staging/restore-test.sh
 
+      - name: Validate production shell scripts
+        run: |
+          bash -n deploy/production/backup.sh
+          bash -n deploy/production/restore-test.sh
+
+      - name: Verify production shell scripts are executable
+        run: |
+          test -x deploy/production/backup.sh
+          test -x deploy/production/restore-test.sh
+
       - name: Validate staging compose
         run: docker compose -f deploy/staging/compose.yaml --env-file deploy/staging/.env.dummy config --quiet
+
+      - name: Validate production compose
+        run: docker compose -f deploy/production/compose.yaml --env-file deploy/production/.env.dummy config --quiet
 
       - name: Staging compose runtime smoke
         env:
@@ -95,6 +108,52 @@ jobs:
           SCHEMA=$(echo "$SCHEMA" | tr -d '[:space:]')
           if [ "$SCHEMA" != "schema_migrations" ]; then
             echo "schema_migrations missing: $SCHEMA"
+            exit 1
+          fi
+          $COMPOSE down -v --remove-orphans
+
+      - name: Production compose runtime smoke
+        env:
+          DATABASE_URL: postgresql://engawa_registry:dummy_password@postgres:5432/engawa_registry
+        run: |
+          set -euo pipefail
+          COMPOSE="docker compose -f deploy/production/compose.yaml --env-file deploy/production/.env.dummy -p engawa-map-prod-ci"
+          $COMPOSE up -d --build postgres migrate registry showcase traefik
+          for i in $(seq 1 60); do
+            TRAEFIK_STATE=$($COMPOSE ps traefik --format '{{.State}}' 2>/dev/null || true)
+            if [ "$TRAEFIK_STATE" = "running" ]; then
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "traefik never reached running state: $TRAEFIK_STATE"
+              $COMPOSE logs traefik || true
+              exit 1
+            fi
+            sleep 2
+          done
+          if $COMPOSE logs traefik 2>&1 | grep -Ei 'error while building configuration|field not found|parsing configuration'; then
+            echo "traefik dynamic config parse errors detected"
+            exit 1
+          fi
+          for i in $(seq 1 60); do
+            if $COMPOSE exec -T registry node -e "fetch('http://127.0.0.1:3000/readyz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"; then
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "registry readyz never became ready"
+              exit 1
+            fi
+            sleep 2
+          done
+          $COMPOSE exec -T registry node -e "fetch('http://127.0.0.1:3000/api/v1/sites?limit=1').then(async r=>{if(!r.ok)process.exit(1);const j=await r.json();if(!Array.isArray(j.items))process.exit(1)}).catch(()=>process.exit(1))"
+          $COMPOSE exec -T showcase wget -qO- http://127.0.0.1:8080/ | grep -q "Engawa Distribution Map"
+          PRIVACY_HEADERS=$($COMPOSE exec -T showcase wget -S -qO- http://127.0.0.1:8080/privacy 2>&1)
+          echo "$PRIVACY_HEADERS" | grep -q " 200 OK"
+          echo "$PRIVACY_HEADERS" | grep -q "Privacy notice"
+          DATA_DIR=$($COMPOSE exec -T postgres psql -U engawa_registry -d engawa_registry -tAc "SHOW data_directory")
+          DATA_DIR=$(echo "$DATA_DIR" | tr -d '[:space:]')
+          if [ "$DATA_DIR" != "/var/lib/postgresql/18/docker" ]; then
+            echo "unexpected data_directory: $DATA_DIR"
             exit 1
           fi
           $COMPOSE down -v --remove-orphans

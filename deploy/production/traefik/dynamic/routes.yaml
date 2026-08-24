@@ -1,0 +1,122 @@
+http:
+  routers:
+    registry-register:
+      rule: Host(`engawa-map.thierry-gilgen-ict.ch`) && Path(`/api/v1/sites`) && Method(`POST`)
+      entryPoints:
+        - websecure
+      priority: 120
+      service: registry
+      middlewares:
+        - api-security-headers
+        - body-limit
+        - rate-limit-register
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    registry-auth:
+      rule: Host(`engawa-map.thierry-gilgen-ict.ch`) && PathPrefix(`/api/v1/sites/`) && (Method(`PATCH`) || Method(`DELETE`))
+      entryPoints:
+        - websecure
+      priority: 110
+      service: registry
+      middlewares:
+        - api-security-headers
+        - body-limit
+        - rate-limit-auth
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    registry-api:
+      rule: Host(`engawa-map.thierry-gilgen-ict.ch`) && PathPrefix(`/api/v1`)
+      entryPoints:
+        - websecure
+      priority: 105
+      service: registry
+      middlewares:
+        - api-security-headers
+        - body-limit
+        - rate-limit-public
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    registry-health:
+      rule: Host(`engawa-map.thierry-gilgen-ict.ch`) && (Path(`/healthz`) || Path(`/readyz`))
+      entryPoints:
+        - websecure
+      priority: 100
+      service: registry
+      middlewares:
+        - api-security-headers
+        - rate-limit-public
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+    showcase:
+      rule: Host(`engawa-map.thierry-gilgen-ict.ch`)
+      entryPoints:
+        - websecure
+      priority: 10
+      service: showcase
+      middlewares:
+        - showcase-security-headers
+      tls:
+        certResolver: letsencrypt
+        options: default
+
+  services:
+    registry:
+      loadBalancer:
+        servers:
+          - url: http://registry:3000
+
+    showcase:
+      loadBalancer:
+        servers:
+          - url: http://showcase:8080
+
+  middlewares:
+    api-security-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: no-referrer
+        frameDeny: true
+        contentSecurityPolicy: "default-src 'none'; frame-ancestors 'none'"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: false
+        stsPreload: false
+
+    showcase-security-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: no-referrer
+        frameDeny: true
+        contentSecurityPolicy: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: false
+        stsPreload: false
+
+    body-limit:
+      buffering:
+        maxRequestBodyBytes: 16384
+
+    rate-limit-register:
+      rateLimit:
+        average: 2
+        burst: 5
+        period: 1s
+
+    rate-limit-auth:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: 1s
+
+    rate-limit-public:
+      rateLimit:
+        average: 30
+        burst: 60
+        period: 1s
