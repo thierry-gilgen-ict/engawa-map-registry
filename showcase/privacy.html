@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy notice — Engawa Distribution Map</title>
+    <meta
+      name="description"
+      content="Privacy notice for the Engawa Distribution Map registry and showcase."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="container">
+        <p class="eyebrow">Engawa Distribution Map</p>
+        <h1>Privacy notice</h1>
+        <p class="lede">Operational facts for the public registry and showcase (v1).</p>
+        <nav class="page-nav" aria-label="Site">
+          <a href="/">Showcase</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container prose">
+      <section>
+        <h2>Voluntary registration</h2>
+        <p>
+          Joining the Distribution Map is operator-initiated through the <code>engawa-map</code> CLI
+          only. Engawa-powered websites do not phone home or send adoption data from normal
+          application runtime.
+        </p>
+      </section>
+
+      <section>
+        <h2>Public listing purpose</h2>
+        <p>
+          The map is a community showcase of Engawa-powered public sites. Only sites in the
+          <code>LISTED</code> state appear on this page and the public API.
+        </p>
+      </section>
+
+      <section>
+        <h2>Public fields</h2>
+        <p>For each listed site, the registry may publish:</p>
+        <ul>
+          <li>Display name</li>
+          <li>Canonical HTTPS origin URL</li>
+          <li>Declared Engawa package versions</li>
+          <li>Optional hints: framework, Bring Your Agent enabled flag, locale count</li>
+          <li>Listing and update timestamps</li>
+        </ul>
+        <p>
+          <code>PENDING</code> and <code>DELISTED</code> records are not shown on the public
+          showcase.
+        </p>
+      </section>
+
+      <section>
+        <h2>Site token model</h2>
+        <ul>
+          <li>
+            The CLI generates a site-scoped bearer token and retains it client-side (for example
+            <code>.engawa-map.local.json</code> or <code>ENGAWA_MAP_TOKEN</code> in dedicated CI).
+          </li>
+          <li>
+            Registration sends only a SHA-256 hash of the token; the server stores the hash only.
+          </li>
+          <li>The server never returns or logs the raw token.</li>
+          <li>The CLI does not print the raw token on successful registration.</li>
+          <li>
+            Protected routes authenticate with <code>Authorization: Bearer &lt;raw-token&gt;</code>.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Lifecycle and retention</h2>
+        <ul>
+          <li>New registrations start as <code>PENDING</code> until manually approved.</li>
+          <li>Approved sites become <code>LISTED</code> and appear here.</li>
+          <li>
+            Delisting (<code>DELISTED</code>) removes public visibility immediately and revokes the
+            stored token hash (<code>NULL</code>).
+          </li>
+          <li>
+            <code>unregister</code> is not a hard delete: non-secret registry rows may remain under
+            the v1 retention policy until maintainer deletion. A bounded hard-deletion period is not
+            defined in v1.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Removal and contact</h2>
+        <ul>
+          <li>Operators with a valid site token: use <code>engawa-map unregister</code>.</li>
+          <li>
+            Security-sensitive reports, private ownership, removal, or identity details:
+            <a href="mailto:info@thierry-gilgen-ict.ch">info@thierry-gilgen-ict.ch</a>
+          </li>
+          <li>
+            Non-sensitive public bug or abuse reports:
+            <a href="https://github.com/thierry-gilgen-ict/engawa-map-registry/issues"
+              >GitHub issues on engawa-map-registry</a
+            >
+          </li>
+        </ul>
+        <p>
+          Do not post secrets, site bearer tokens, or sensitive abuse details in public GitHub
+          issues.
+        </p>
+      </section>
+
+      <section>
+        <h2>What we do not collect</h2>
+        <ul>
+          <li>No visitor page-view telemetry on this showcase</li>
+          <li>No MCP query logging, prompts, or Bring Your Agent session context</li>
+          <li>No automatic crawling or HTTP fetch of listed canonical URLs</li>
+          <li>No Traefik access logs retaining raw client IP addresses at the edge</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Abuse and rate limits</h2>
+        <p>
+          The registry applies operational rate limits at the edge and application layer.
+          Maintainers may delist abusive entries manually. There is no public admin HTTP API.
+        </p>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <div class="container">
+        <p><a href="/">Back to showcase</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

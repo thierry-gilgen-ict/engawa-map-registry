@@ -1,6 +1,6 @@
 # Production deployment design (DM3A contract)
 
-**Status:** design only — **not deployed**. Implementation artifacts are **DM3B**. Live acceptance is **DM3C**.
+**Status:** DM3B artifacts ready — **production NOT deployed**. Live acceptance is **DM3C**.
 
 ## Deployment status
 
@@ -10,6 +10,8 @@ PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch
 PRODUCTION_ORIGIN = https://engawa-map.thierry-gilgen-ict.ch
 STAGING_LIVE = YES (staging-engawa-map.thierry-gilgen-ict.ch, DM2B PASS)
 STAGING_DATA_COPIED_TO_PRODUCTION = NO
+DM3B_SHOWCASE = IMPLEMENTED (showcase/ static service)
+DM3B_DEPLOY_ARTIFACTS = READY (deploy/production/)
 ```
 
 Authoritative product contract: [Engawa distribution-map-production-launch.md](https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map-production-launch.md).
@@ -52,17 +54,18 @@ Networks (same pattern as staging):
 - PostgreSQL 18, volume mount `/var/lib/postgresql`, PGDATA `/var/lib/postgresql/18/docker`
 - Explicit `migrate` service; no auto-migrate on registry start
 - Registry container: non-root, read-only root FS, no-new-privileges, cap_drop ALL
+- Showcase container: nginx-unprivileged, non-root, read-only root FS, cap_drop ALL
 - No published 3000 or 5432
-- TLS ≥ 1.2, CSP on API paths; showcase CSP tuned for static UI in DM3B
+- TLS ≥ 1.2, CSP on API paths; showcase CSP tuned for static UI
 - No Traefik access logs; bounded Docker log rotation
 - `TRUST_PROXY_HOPS=1`
 - Backup to `/var/backups/engawa-map-registry`, restore-test script, systemd timer
 
-## DM3B deliverables (not in DM3A)
+## DM3B deliverables (implemented)
 
-- `deploy/production/` — compose, Traefik dynamic config, `.env.example`, backup scripts
-- Public showcase frontend service (static or minimal SSR)
-- CI: compose config, runtime smoke (postgres → migrate → registry → showcase)
+- `deploy/production/` — compose (`engawa-map-registry-production`), Traefik dynamic config, `.env.example`, backup scripts
+- `showcase/` — static public UI (`index.html`, `privacy.html`, ES module client)
+- CI: production compose config validation, runtime smoke (postgres → migrate → registry → showcase)
 - Documentation cross-links
 
 ## DM3C acceptance
