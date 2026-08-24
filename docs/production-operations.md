@@ -104,13 +104,13 @@ Documentation-only changes under `docs/` that are **not** baked into container i
 
 ### Components
 
-| Artifact | Path |
-| -------- | ---- |
-| Backup script | [deploy/production/backup.sh](../deploy/production/backup.sh) |
-| Restore-test script | [deploy/production/restore-test.sh](../deploy/production/restore-test.sh) |
-| systemd service | [deploy/production/systemd/engawa-map-registry-backup.service](../deploy/production/systemd/engawa-map-registry-backup.service) |
-| systemd timer | [deploy/production/systemd/engawa-map-registry-backup.timer](../deploy/production/systemd/engawa-map-registry-backup.timer) |
-| Backup directory | `/var/backups/engawa-map-registry` |
+| Artifact            | Path                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Backup script       | [deploy/production/backup.sh](../deploy/production/backup.sh)                                                                   |
+| Restore-test script | [deploy/production/restore-test.sh](../deploy/production/restore-test.sh)                                                       |
+| systemd service     | [deploy/production/systemd/engawa-map-registry-backup.service](../deploy/production/systemd/engawa-map-registry-backup.service) |
+| systemd timer       | [deploy/production/systemd/engawa-map-registry-backup.timer](../deploy/production/systemd/engawa-map-registry-backup.timer)     |
+| Backup directory    | `/var/backups/engawa-map-registry`                                                                                              |
 
 ### Backup behavior
 
