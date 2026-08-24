@@ -3,17 +3,17 @@
 Dedicated registry service for the optional [Engawa Distribution Map](https://github.com/thierry-gilgen-ict/engawa). This repository is a **separate security boundary** from Engawa consumer sites and from the main Thierry Gilgen ICT website.
 
 ```text
-STATUS = STAGING_LIVE
-PRODUCTION = NOT_DEPLOYED
-DM3B_ARTIFACTS = READY (showcase + deploy/production — not deployed)
+STATUS = LIVE
+PRODUCTION = LIVE (DM3C acceptance PASS)
+PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch
+PRODUCTION_ACCEPTED_SHA = 91b971e47f4014df97cd4dbcade73ac2d92e8aa1
 LIVE_STAGING_STATUS = PASS
 STAGING_HOSTNAME = staging-engawa-map.thierry-gilgen-ict.ch
 STAGING_ACCEPTED_SHA = 61623df1422206d86fc0b4aee39e1f843440faa9
-DM2B_MERGE_SHA = 4a45b71cd042b81ceee4340148d60bf921526732
-PRODUCTION_HOST = engawa-map.thierry-gilgen-ict.ch (not deployed — see docs/production-deployment.md)
+NPM_CLI = @thierry-gilgen-ict/engawa-map@0.1.0 (public on npm)
 ```
 
-Staging is operator-deployed via [deploy/staging/](deploy/staging/). Production deploy artifacts live in [deploy/production/](deploy/production/) and the public showcase static service in [showcase/](showcase/). **Production is not deployed** until DM3C acceptance.
+Staging is operator-deployed via [deploy/staging/](deploy/staging/). Production is live at [engawa-map.thierry-gilgen-ict.ch](https://engawa-map.thierry-gilgen-ict.ch) with the public showcase in [showcase/](showcase/) and deploy artifacts in [deploy/production/](deploy/production/).
 
 ## What this service does
 
@@ -55,11 +55,18 @@ See [docs/staging-deployment.md](docs/staging-deployment.md) for the full runboo
 
 Staging URL: `https://staging-engawa-map.thierry-gilgen-ict.ch`
 
-## Production deployment (DM3B — not live)
+## Production deployment
 
-See [docs/production-deployment.md](docs/production-deployment.md). Artifacts are ready (`deploy/production/`, `showcase/`); **production is not deployed** until DM3C acceptance.
+See [docs/production-deployment.md](docs/production-deployment.md). Production is **live** at `https://engawa-map.thierry-gilgen-ict.ch` (DM3C acceptance PASS).
 
-Target URL: `https://engawa-map.thierry-gilgen-ict.ch`
+Join the map (voluntary, operator-initiated):
+
+```bash
+npm install --save-dev @thierry-gilgen-ict/engawa-map
+npx engawa-map register
+```
+
+First registration is `PENDING`; public listing requires manual approval. No runtime phone-home from Engawa consumer sites.
 
 ## Commands
 
