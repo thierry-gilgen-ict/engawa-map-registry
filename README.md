@@ -98,6 +98,7 @@ Registration idempotency compares `SHA-256(JSON.stringify(registrationPayloadSch
 - [Security model](docs/security.md)
 - [Staging deployment runbook](docs/staging-deployment.md)
 - [Production deployment design](docs/production-deployment.md)
+- [Production operations runbook](docs/production-operations.md)
 - Engawa contract: [distribution-map-api.md](https://github.com/thierry-gilgen-ict/engawa/blob/main/docs/distribution-map-api.md)
 
 ## License
